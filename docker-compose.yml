@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # Terraform/Terragrunt/Ansible environment
+  devops-env:
+    build:
+      context: .
+      dockerfile: Dockerfile.devops
+    container_name: staj-devops
+    volumes:
+      - .:/workspace
+      - ~/.aws:/root/.aws:ro  # AWS credentials
+    working_dir: /workspace
+    environment:
+      - AWS_REGION=eu-north-1
+    command: tail -f /dev/null  # Container'ı açık tut
+    networks:
+      - staj-network
+
+  # Flask Application (Local test için)
+  flask-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.flask
+    container_name: staj-flask
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app.py:/app/app.py
+      - ./requirements.txt:/app/requirements.txt
+    environment:
+      - FLASK_ENV=development
+      - SERVER_IP=localhost
+    networks:
+      - staj-network
+
+  # Node Exporter (Local test için)
+  node-exporter:
+    image: prom/node-exporter:v1.8.1
+    container_name: staj-node-exporter
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.rootfs=/host'
+    volumes:
+      - '/:/host:ro,rslave'
+    networks:
+      - staj-network
+
+  # Prometheus (Local test için)
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: staj-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.enable-lifecycle'
+    networks:
+      - staj-network
+
+  # Grafana (Local test için)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: staj-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./docker/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    networks:
+      - staj-network
+
+volumes:
+  grafana-storage:
+
+networks:
+  staj-network:
+    driver: bridge

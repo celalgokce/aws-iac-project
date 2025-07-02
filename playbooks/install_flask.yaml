@@ -1,0 +1,6 @@
+---
+- hosts: web
+  become: true
+  tasks:
+    - yum: name=python3 state=present
+    - pip: name=flask executable=pip3

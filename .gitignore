@@ -1,0 +1,24 @@
+# AWS Keys
+*.pem
+*key.pem
+sstaj-key*
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terragrunt-cache/
+
+# Docker
+.env
+
+# Logs
+*.log
+
+# AWS Credentials
+.aws/
+credentials
+
+# OS
+.DS_Store
+Thumbs.db

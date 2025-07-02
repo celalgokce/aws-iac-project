@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Requirements kopyala ve kur
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Uygulama dosyasını kopyala
+COPY app.py .
+
+# Port 5000'i aç
+EXPOSE 5000
+
+# Flask uygulamasını başlat
+CMD ["python", "app.py"]
